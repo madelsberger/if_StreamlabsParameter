@@ -59,6 +59,40 @@ If the evaluated response string is 0-length, no message is sent, so a command
 with this response will say *You have a lot of points* only if the user
 invoking it has more than 1000 points.
 
+If you want a command's behavior to depend on the users permission level, you
+can use the $perm parameter found at
+https://github.com/madelsberger/perm_StreamlabsParameter ; note that this is
+not needed if only users with a certain permission level should have access to
+the command, as the ChatBot command configuartion supports this already.
+
+The $msg parameter presents a challenge if you want to use it with $if.  To
+get useful results, you need $msg expanded before the $if expression is
+evaluated - which it is - but since we have no control over what characters are
+used in the $msg value, this can result in an expression Python can't evaluate
+(or, worse, vulnerability to a type of injection attack).  For example,
+suppose you have a custom !quote command that uses $if like this:
+
+    $if('len("$msg") < 100', ...
+ 
+If a user types something like
+
+    !quote "Somebody set up us the bomb!"
+
+then the expression will expand as
+
+    len(""Somebody set up us the bomb!"") < 100
+
+and Python won't know what to do with that.  If you want to process the $msg
+value, you can use the $escMsg parameter found at
+https://github.com/madelsberger/escMsg_StreamlabsParameter like this:
+
+    $if('len("$escMsg") < 100', ...
+
+$escMsg will expand to a "sanitized" version of the $msg value that can be
+processed by Python.  (It also has options for URL Encoding and for HTML
+entity substitution; support to escape $msg for use in other contexts may be
+added later.)
+
 Note that in `<expr>` string values must be enclosed in quotes (since the
 expression is interpreted as Python code), as in 
 
